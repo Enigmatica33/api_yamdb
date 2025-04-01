@@ -1,6 +1,5 @@
 from django.utils import timezone
 from rest_framework import serializers
-# from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import Title, Genre, Category
 
@@ -18,7 +17,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        exclude = ('id',)
+        fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):
