@@ -121,6 +121,7 @@ class Review(models.Model):
         verbose_name = "отзыв"
         verbose_name_plural = "Отзывы"
         default_related_name = 'reviews'
+        unique_together = ('title', 'author')
 
     def __str__(self):
         return self.text[:20]
