@@ -50,6 +50,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         queryset = title.reviews.all()
         return queryset
         
+    def perform_create(self, serializer):
+        serializer.save(
+            title=get_object_or_404(
+                Title,
+                id=self.kwargs.get('title_id'))
+        )
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
@@ -60,5 +66,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         review = get_object_or_404(title.reviews.all(),id=self.kwargs.get('review_id'))
         queryset = review.comments.all()
         return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(
+            review=get_object_or_404(
+                Review,
+                id=self.kwargs.get('review_id'))
+        )
 
 
