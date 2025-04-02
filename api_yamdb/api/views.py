@@ -42,4 +42,13 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        
+
+class CommentViewSet(viewsets.ModelViewSet):
+    
+
 
