@@ -140,11 +140,6 @@ class Comment(models.Model):
     text = models.TextField(
         verbose_name='Текст комментария'
     )
-    title = models.ForeingKey(
-        Title,
-        on_delete=models.CASCADE,
-        verbose_name='Произведение'
-    )
     review = models.ForeingKey(
         Review,
         on_delete=models.CASCADE,
