@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from reviews.models import Title, Genre, Category
+from reviews.models import Title, Genre, Category, Review, Comment
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -54,3 +54,10 @@ class TitleSerializer(serializers.ModelSerializer):
                 'Год создания не может быть больше текущего!',
             )
         return value
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    
+
+    class Meta:
+        model = Review
