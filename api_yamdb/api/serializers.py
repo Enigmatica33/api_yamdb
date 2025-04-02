@@ -68,21 +68,20 @@ class ReviewSerializer(serializers.ModelSerializer):
         max_value=10,
         min_value=1
     )
-#    title = # serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-# Нужно разобраться как сделать поле title автозаполняемым из параметров запроса
-  #      validators = [
-  #          validators.UniqueTogetherValidator(
-#                queryset=Review.objects.all(),
-#                fields=('author', 'title'),
- #           )
- #       ]
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('author', 'title'),
+            )
+        ]
 
-  #  get_title(self, obj):
-#       return get_object_or_404(self.request
+    get_title(self, obj):
+       return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
 
 class CommentSerializer(serializers.ModelSerializer):
