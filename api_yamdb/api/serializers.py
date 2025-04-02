@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 from rest_framework import serializers, validators
 
 from reviews.models import Title, Genre, Category, Review, Comment
@@ -35,6 +36,7 @@ class TitleSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         many=True,
     )
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
@@ -42,7 +44,7 @@ class TitleSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'year',
-            # 'rating',
+            'rating',
             'description',
             'genre',
             'category'
@@ -57,6 +59,8 @@ class TitleSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def get_rating(self, object):
+        return object.reviews.aggregate(Avg('score'))
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -68,7 +72,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         max_value=10,
         min_value=1
     )
-    title = serializers.SerializerMethodField()
+    title = serializers.HiddenField(default= serializers.SerializerMethodField(method_name='get_title')
 
     class Meta:
         model = Review
