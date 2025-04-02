@@ -5,9 +5,11 @@ from rest_framework.pagination import LimitOffsetPagination
 from api.serializers import (
     CategorySerializer,
     TitleSerializer,
-    GenreSerializer
+    GenreSerializer,
+    CommentSerializer,
+    ReviewSerializer
 )
-from reviews.models import Title, Category, Genre
+from reviews.models import Title, Category, Genre, Review, Comment
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -37,3 +39,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+
