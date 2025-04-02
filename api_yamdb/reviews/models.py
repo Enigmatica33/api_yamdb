@@ -121,7 +121,7 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         auto_add_now=True,
         verbose_name='Дата добавления'
     )
@@ -155,7 +155,7 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         auto_add_now=True,
         verbose_name='Дата добавления'
     )
