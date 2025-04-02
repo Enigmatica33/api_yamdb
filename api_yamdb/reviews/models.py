@@ -8,6 +8,8 @@ User = get_user_model()
 
 MAX_TITLE_LENGTH = 256
 MIN_YEAR = -3000
+MAX_SCORE = 10
+MIN_SCORE = 1
 
 
 class Category(models.Model):
@@ -101,6 +103,13 @@ class Title(models.Model):
 class Review(models.Model):
     text = models.TextField(
         verbose_name='Текст отзыва'
+    )
+    value = models.SmallIntegerField(
+        validators=[
+            MaxValueValidator(MAX_SCORE),
+            MinValueValidator(MIN_SCORE)
+        ],
+        verbose_name='Оценка'
     )
     title = models.ForeingKey(
         Title,
