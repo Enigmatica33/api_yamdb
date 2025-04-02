@@ -46,10 +46,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        queryset = get_object_or_404(Title, id=self.kwargs.get('post_id')
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        queryset = title.reviews.all()
+        return queryset
         
 
 class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    pagination_class = LimitOffsetPagination
     
+    def get_queryset(self):
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        review = get_object_or_404(title.reviews.all(),id=self.kwargs.get('review_id'))
+        queryset = review.comments.all()
+        return queryset
 
 
