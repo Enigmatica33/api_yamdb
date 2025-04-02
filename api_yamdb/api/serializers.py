@@ -1,6 +1,6 @@
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
+from rest_framework import serializers, validators
 
 from reviews.models import Title, Genre, Category, Review, Comment
 
@@ -71,6 +71,23 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'text', 'author', 'score', 'pubdate')
-    
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('author', 'title'),
+            )
+        ]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        'username',
+        read_only=False,
+        queryset=User.objects.all(),
+        default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'pub_date')
 
