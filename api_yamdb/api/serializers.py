@@ -1,8 +1,10 @@
 from django.utils import timezone
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from reviews.models import Title, Genre, Category, Review, Comment
 
+User = get_user_model()
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для модели Category."""
@@ -57,7 +59,11 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    
+   author = serializers.serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=User.objects.all(),
+        many=True,
+    )
 
     class Meta:
         model = Review
