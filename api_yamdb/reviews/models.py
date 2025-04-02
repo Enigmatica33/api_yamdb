@@ -131,9 +131,10 @@ class Review(models.Model):
         verbose_name_plural = "Отзывы"
         default_related_name = 'reviews'
         unique_together = ('title', 'author')
+        ordering = ('-pub_date',)
 
     def __str__(self):
-        return self.text[:20]
+        return self.text[:MAX_TITLE_LENGTH]
 
 
 class Comment(models.Model):
@@ -159,8 +160,9 @@ class Comment(models.Model):
         verbose_name = "комментарий"
         verbose_name_plural = "Комментарии"
         default_related_name = 'comments'
+        ordering = ('-pub_date',)
 
     def __str__(self):
-        return self.text[:20]
+        return self.text[:MAX_TITLE_LENGTH]
 
 
