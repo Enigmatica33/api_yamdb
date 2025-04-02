@@ -23,6 +23,17 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для модели Title."""
 
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+        required=False,
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True,
+    )
+
     class Meta:
         model = Title
         fields = (
@@ -43,23 +54,3 @@ class TitleSerializer(serializers.ModelSerializer):
                 'Год создания не может быть больше текущего!',
             )
         return value
-
-
-class TitleReadSerializer(TitleSerializer):
-    """Сериализатор Title для чтения."""
-    genre = GenreSerializer(read_only=True, many=True)
-    category = CategorySerializer(read_only=True)
-
-
-class TitleWriteSerializer(TitleSerializer):
-    """Сериализатор Title для записи."""
-    category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-        required=False,
-    )
-    genre = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Genre.objects.all(),
-        many=True,
-    )

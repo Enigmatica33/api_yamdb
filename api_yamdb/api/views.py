@@ -1,13 +1,10 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets
+from rest_framework import filters, viewsets
 from rest_framework.pagination import LimitOffsetPagination
-
 
 from api.serializers import (
     CategorySerializer,
     TitleSerializer,
-    TitleReadSerializer,
-    TitleWriteSerializer,
     GenreSerializer
 )
 from reviews.models import Title, Category, Genre
@@ -20,11 +17,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
-
-    def get_serializer_class(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            return TitleReadSerializer
-        return TitleWriteSerializer
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
