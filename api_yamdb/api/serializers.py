@@ -59,11 +59,18 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-   author = serializers.serializers.SlugRelatedField(
-        slug_field='slug',
+    author = serializers.SlugRelatedField(
+        'username',
+        read_only=False,
         queryset=User.objects.all(),
-        many=True,
+        default=serializers.CurrentUserDefault())
+    score = serializers.IntegerField(
+        max_value=10,
+        min_value=1
     )
 
     class Meta:
         model = Review
+        fields = ('id', 'text', 'author', 'score', 'pubdate')
+    
+
