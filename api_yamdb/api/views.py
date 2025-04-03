@@ -5,9 +5,11 @@ from rest_framework.pagination import LimitOffsetPagination
 from api.serializers import (
     CategorySerializer,
     TitleSerializer,
-    GenreSerializer
+    GenreSerializer,
+    CommentSerializer,
+    ReviewSerializer
 )
-from reviews.models import Title, Category, Genre
+from reviews.models import Title, Category, Genre, Review, Comment
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -37,3 +39,39 @@ class GenreViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        queryset = title.reviews.all()
+        return queryset
+        
+    def perform_create(self, serializer):
+        serializer.save(
+            title=get_object_or_404(
+                Title,
+                id=self.kwargs.get('title_id'))
+        )
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    pagination_class = LimitOffsetPagination
+    
+    def get_queryset(self):
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        review = get_object_or_404(title.reviews.all(),id=self.kwargs.get('review_id'))
+        queryset = review.comments.all()
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(
+            review=get_object_or_404(
+                Review,
+                id=self.kwargs.get('review_id'))
+        )
+
+

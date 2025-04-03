@@ -1,10 +1,15 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
+
+User = get_user_model()
 
 
 MAX_TITLE_LENGTH = 256
 MIN_YEAR = -3000
+MAX_SCORE = 10
+MIN_SCORE = 1
 
 
 class Category(models.Model):
@@ -93,3 +98,71 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Review(models.Model):
+    text = models.TextField(
+        verbose_name='Текст отзыва'
+    )
+    value = models.SmallIntegerField(
+        validators=[
+            MaxValueValidator(MAX_SCORE),
+            MinValueValidator(MIN_SCORE)
+        ],
+        verbose_name='Оценка'
+    )
+    title = models.ForeingKey(
+        Title,
+        on_delete=models.CASCADE,
+        verbose_name='Произведение'
+    )
+    author = models.ForeingKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор'
+    )
+    pub_date = models.DateTimeField(
+        auto_add_now=True,
+        verbose_name='Дата добавления'
+    )
+
+    class Meta:
+        verbose_name = "отзыв"
+        verbose_name_plural = "Отзывы"
+        default_related_name = 'reviews'
+        unique_together = ('title', 'author')
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return self.text[:MAX_TITLE_LENGTH]
+
+
+class Comment(models.Model):
+    text = models.TextField(
+        verbose_name='Текст комментария'
+    )
+    review = models.ForeingKey(
+        Review,
+        on_delete=models.CASCADE,
+        verbose_name='Отзыв'
+    )
+    author = models.ForeingKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор'
+    )
+    pub_date = models.DateTimeField(
+        auto_add_now=True,
+        verbose_name='Дата добавления'
+    )
+
+    class Meta:
+        verbose_name = "комментарий"
+        verbose_name_plural = "Комментарии"
+        default_related_name = 'comments'
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return self.text[:MAX_TITLE_LENGTH]
+
+
