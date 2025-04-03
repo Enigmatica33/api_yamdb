@@ -111,18 +111,18 @@ class Review(models.Model):
         ],
         verbose_name='Оценка'
     )
-    title = models.ForeingKey(
+    title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         verbose_name='Произведение'
     )
-    author = models.ForeingKey(
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
     pub_date = models.DateTimeField(
-        auto_add_now=True,
+        auto_now_add=True,
         verbose_name='Дата добавления'
     )
 
@@ -141,18 +141,18 @@ class Comment(models.Model):
     text = models.TextField(
         verbose_name='Текст комментария'
     )
-    review = models.ForeingKey(
+    review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         verbose_name='Отзыв'
     )
-    author = models.ForeingKey(
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
     pub_date = models.DateTimeField(
-        auto_add_now=True,
+        auto_now_add=True,
         verbose_name='Дата добавления'
     )
 
@@ -164,5 +164,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text[:MAX_TITLE_LENGTH]
-
-
