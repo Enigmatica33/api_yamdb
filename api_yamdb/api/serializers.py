@@ -1,11 +1,13 @@
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from rest_framework import serializers, validators
 
-from reviews.models import Title, Genre, Category, Review, Comment
+from reviews.models import Title, Genre, Category, Review
 
 User = get_user_model()
+
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для модели Category."""
@@ -62,6 +64,7 @@ class TitleSerializer(serializers.ModelSerializer):
     def get_rating(self, object):
         return object.reviews.aggregate(Avg('score'))
 
+
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         'username',
@@ -72,7 +75,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         max_value=10,
         min_value=1
     )
-    title = serializers.HiddenField(default= serializers.SerializerMethodField(method_name='get_title')
+    title = serializers.HiddenField(
+        default=serializers.SerializerMethodField(method_name='get_title')
+    )
 
     class Meta:
         model = Review
@@ -84,8 +89,8 @@ class ReviewSerializer(serializers.ModelSerializer):
             )
         ]
 
-    get_title(self, obj):
-       return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+    def get_title(self, obj):
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -98,4 +103,3 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'pub_date')
-
