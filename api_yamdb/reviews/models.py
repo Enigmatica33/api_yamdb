@@ -170,7 +170,7 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='Title_Genre',
+        verbose_name='Жанр'
     )
     category = models.ForeignKey(
         Category,
@@ -188,33 +188,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class Title_Genre(models.Model):
-    """Связь жанра и тайтла."""
-
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.SET_NULL,
-        null=True,
-        verbose_name='Жанр',
-    )
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        verbose_name='Произведение',
-    )
-
-    class Meta:
-        constraints = (
-            models.UniqueConstraint(
-                fields=('genre', 'title'),
-                name='unique_genre_title',
-            ),
-        )
-
-    def __str__(self):
-        return f'{self.title} {self.genre}'
 
 
 class Review(models.Model):
