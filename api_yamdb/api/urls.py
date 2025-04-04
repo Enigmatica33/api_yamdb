@@ -6,7 +6,11 @@ from api.views import (
     CategoryViewSet,
     GenreViewSet,
     ReviewViewSet,
-    CommentViewSet
+    CommentViewSet,
+    signup,
+    token,
+    UsersViewSet,
+    me_profile
 )
 
 app_name = 'api'
@@ -25,8 +29,11 @@ v1_router.register(
     CommentViewSet,
     basename='comments'
 )
+v1_router.register('users', UsersViewSet, basename='users')
 
 urlpatterns = [
-    # path('v1/', include('djoser.urls.jwt')),
+    path('v1/auth/signup/', signup, name='signup'),
+    path('v1/auth/token/', token, name='token'),
+    path('v1/users/me/', me_profile, name='me_profile'),
     path('v1/', include(v1_router.urls)),
 ]
