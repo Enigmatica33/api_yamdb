@@ -1,15 +1,104 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 
-User = get_user_model()
-
 
 MAX_TITLE_LENGTH = 256
+MAX_TEXT_LENGTH = 254
+MAX_NAME_LENGTH = 150
+MAX_CODE_LENGTH = 50
+MAX_ROLE_LENGTH = 50
 MIN_YEAR = -3000
 MAX_SCORE = 10
 MIN_SCORE = 1
+
+
+class User(AbstractUser):
+    USER_ROLES = (
+        ('user', 'Пользователь'),
+        ('moderator', 'Модератор'),
+        ('admin', 'Администратор'),
+    )
+
+    username = models.CharField(
+        max_length=MAX_NAME_LENGTH,
+        unique=True,
+        blank=False,
+        null=False,
+        verbose_name='Пользователь'
+    )
+
+    email = models.EmailField(
+        max_length=MAX_TEXT_LENGTH,
+        unique=True,
+        blank=False,
+        null=False,
+        verbose_name='Электронная почта'
+    )
+
+    first_name = models.CharField(
+        max_length=MAX_NAME_LENGTH,
+        blank=True,
+        verbose_name='Имя'
+    )
+
+    last_name = models.CharField(
+        max_length=MAX_NAME_LENGTH,
+        blank=True,
+        verbose_name='Фамилия'
+    )
+
+    bio = models.TextField(
+        blank=True,
+        verbose_name='Биография'
+    )
+
+    role = models.CharField(
+        max_length=MAX_ROLE_LENGTH,
+        choices=USER_ROLES,
+        default='user',
+        verbose_name='Роль'
+    )
+
+    confirmation_code = models.CharField(
+        max_length=MAX_CODE_LENGTH,
+        blank=True,
+        null=True,
+        verbose_name='Код подтверждения'
+    )
+
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='custom_user_set',
+        blank=True,
+        help_text='The groups this user belongs to.',
+        verbose_name='Groups'
+    )
+
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='custom_user_set',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='User permissions'
+    )
+
+    class Meta:
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
+        ordering = ('username',)
+
+    def __str__(self):
+        return self.username
+
+    @property
+    def is_admin(self):
+        return self.role == 'admin' or self.is_superuser
+
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'
 
 
 class Category(models.Model):
@@ -40,6 +129,7 @@ class Genre(models.Model):
         max_length=MAX_TITLE_LENGTH,
         verbose_name='Название жанра'
     )
+
     slug = models.SlugField(
         unique=True,
         verbose_name='Slug жанра',
