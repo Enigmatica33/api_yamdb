@@ -32,11 +32,11 @@ class SignUpSerializer(serializers.Serializer):
 
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError(
-                {'email": "Адрес уже используется другим пользователем.'})
+                {'email': 'Адрес уже используется другим пользователем.'})
 
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError(
-                {'username": "Имя пользователя уже занято другим адресом.'})
+                {'username': 'Имя пользователя уже занято другим адресом.'})
         return data
 
 
