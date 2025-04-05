@@ -3,15 +3,15 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 
-
-MAX_TITLE_LENGTH = 256
-MAX_TEXT_LENGTH = 254
-MAX_NAME_LENGTH = 150
-MAX_CODE_LENGTH = 50
-MAX_ROLE_LENGTH = 50
-MIN_YEAR = -3000
-MAX_SCORE = 10
-MIN_SCORE = 1
+from reviews.constants import (
+    MAX_TITLE_LENGTH,
+    MAX_TEXT_LENGTH,
+    MAX_NAME_LENGTH,
+    MAX_CODE_LENGTH,
+    MAX_ROLE_LENGTH,
+    MAX_SCORE,
+    MIN_SCORE
+)
 
 
 class User(AbstractUser):
@@ -159,7 +159,6 @@ class Title(models.Model):
         null=True,
         validators=[
             MaxValueValidator(timezone.now().year),
-            MinValueValidator(MIN_YEAR)
         ],
         verbose_name='Год создания'
     )
