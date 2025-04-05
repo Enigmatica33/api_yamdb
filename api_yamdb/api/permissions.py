@@ -25,7 +25,7 @@ class IsAdminOrReadOnlyCustom(permissions.BasePermission):
         if not request.user.is_authenticated:
             # Исключение 401 для неавторизованных POST/DELETE
             raise AuthenticationFailed(
-                detail="Прав не достаточно.",
+                detail='Прав не достаточно.',
                 code='not_authenticated'
             )
         return request.user.is_admin

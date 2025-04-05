@@ -4,13 +4,13 @@ from django.db import models
 from django.utils import timezone
 
 from reviews.constants import (
-    MAX_TITLE_LENGTH,
-    MAX_TEXT_LENGTH,
-    MAX_NAME_LENGTH,
     MAX_CODE_LENGTH,
+    MAX_NAME_LENGTH,
     MAX_ROLE_LENGTH,
     MAX_SCORE,
-    MIN_SCORE
+    MIN_SCORE,
+    MAX_TITLE_LENGTH,
+    MAX_TEXT_LENGTH,
 )
 
 
@@ -85,8 +85,8 @@ class User(AbstractUser):
     )
 
     class Meta:
-        verbose_name = "Пользователь"
-        verbose_name_plural = "Пользователи"
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
     def __str__(self):
@@ -110,14 +110,14 @@ class Category(models.Model):
         unique=True,
         verbose_name='Slug категории',
         help_text=(
-            "Идентификатор категории для URL; "
-            "разрешены символы латиницы, цифры, дефис и подчёркивание."
+            'Идентификатор категории для URL; '
+            'разрешены символы латиницы, цифры, дефис и подчёркивание.'
         ),
     )
 
     class Meta:
-        verbose_name = "Категория произведений"
-        verbose_name_plural = "Категории произведений"
+        verbose_name = 'Категория произведений'
+        verbose_name_plural = 'Категории произведений'
         ordering = ('name',)
 
     def __str__(self):
@@ -134,15 +134,15 @@ class Genre(models.Model):
         unique=True,
         verbose_name='Slug жанра',
         help_text=(
-            "Идентификатор жанра для URL; "
-            "разрешены символы латиницы, цифры, дефис и подчёркивание."
+            'Идентификатор жанра для URL; '
+            'разрешены символы латиницы, цифры, дефис и подчёркивание.'
         ),
 
     )
 
     class Meta:
-        verbose_name = "Жанр произведений"
-        verbose_name_plural = "Жанры произведений"
+        verbose_name = 'Жанр произведений'
+        verbose_name_plural = 'Жанры произведений'
         ordering = ('name',)
 
     def __str__(self):
@@ -181,8 +181,8 @@ class Title(models.Model):
     )
 
     class Meta:
-        verbose_name = "Произведение"
-        verbose_name_plural = "Произведения"
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
         default_related_name = 'titles'
         ordering = ('name',)
 
@@ -244,8 +244,8 @@ class Review(models.Model):
     )
 
     class Meta:
-        verbose_name = "отзыв"
-        verbose_name_plural = "Отзывы"
+        verbose_name = 'отзыв'
+        verbose_name_plural = 'Отзывы'
         default_related_name = 'reviews'
         unique_together = ('title', 'author')
         ordering = ('-pub_date',)
@@ -274,8 +274,8 @@ class Comment(models.Model):
     )
 
     class Meta:
-        verbose_name = "комментарий"
-        verbose_name_plural = "Комментарии"
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
         default_related_name = 'comments'
         ordering = ('-pub_date',)
 

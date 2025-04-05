@@ -1,34 +1,34 @@
-from django.shortcuts import get_object_or_404
-from django.db import IntegrityError
-from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import CharFilter, FilterSet
-from rest_framework import filters, viewsets, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework_simplejwt.tokens import AccessToken
-from django.core.mail import send_mail
 import uuid
 
-from api.serializers import (
-    CategorySerializer,
-    TitleSerializer,
-    GenreSerializer,
-    CommentSerializer,
-    ReviewSerializer,
-    SignUpSerializer,
-    TokenSerializer,
-    UserSerializer,
-    MeSerializer
-)
+from django.core.mail import send_mail
+from django.db import IntegrityError
+from django_filters import CharFilter, FilterSet
+from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
 
 from api.permissions import (
     IsAdmin,
     IsAdminOrReadOnlyCustom,
     IsAuthorModeratorAdminOrReadOnly
 )
-from reviews.models import Title, Category, Genre, Review, User
+from api.serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    GenreSerializer,
+    MeSerializer,
+    ReviewSerializer,
+    SignUpSerializer,
+    TitleSerializer,
+    TokenSerializer,
+    UserSerializer,
+)
+from reviews.models import Category, Genre, Review, Title, User
 
 
 @api_view(['POST'])
@@ -181,7 +181,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             )
         except IntegrityError:
             return Response(
-                {"detail": "Вы уже оставили отзыв на это произведение."},
+                {'detail': 'Вы уже оставили отзыв на это произведение.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

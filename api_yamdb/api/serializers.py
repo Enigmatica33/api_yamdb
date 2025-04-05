@@ -1,13 +1,14 @@
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
-from django.db.models import Avg
-from rest_framework import serializers
-from rest_framework import validators as rf_validators
-from django.core import validators
 import re
 
-from reviews.models import Title, Genre, Category, Review, User, Comment
-from reviews.models import MAX_TEXT_LENGTH, MAX_NAME_LENGTH
+from django.core import validators
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import serializers
+from rest_framework import validators as rf_validators
+
+from reviews.constants import MAX_NAME_LENGTH, MAX_TEXT_LENGTH
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -16,10 +17,10 @@ class SignUpSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         if value.lower() == 'me':
-            raise serializers.ValidationError("Пользователь 'me' запрещён.")
+            raise serializers.ValidationError('Пользователь <me> запрещён.')
         if not re.match(r'^[\w.@+-]+$', value):
             raise serializers.ValidationError(
-                "Имя может содержать буквы, цифры и символы @/./+/-/_."
+                'Имя может содержать буквы, цифры и символы @/./+/-/_.'
             )
         return value
 
@@ -31,11 +32,11 @@ class SignUpSerializer(serializers.Serializer):
 
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError(
-                {"email": "Адрес уже используется другим пользователем."})
+                {'email": "Адрес уже используется другим пользователем.'})
 
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError(
-                {"username": "Имя пользователя уже занято другим адресом."})
+                {'username": "Имя пользователя уже занято другим адресом.'})
         return data
 
 
@@ -55,7 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[
             validators.RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
-                message="Имя может содержать буквы, цифры и символы @/./+/-/_."
+                message='Имя может содержать буквы, цифры и символы @/./+/-/_.'
             ),
             rf_validators.UniqueValidator(queryset=User.objects.all())
         ]
@@ -69,12 +70,12 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         if len(value) > MAX_TEXT_LENGTH:
             raise serializers.ValidationError(
-                f"Адрес не должен быть больше {MAX_TEXT_LENGTH} симв.")
+                f'Адрес не должен быть больше {MAX_TEXT_LENGTH} симв.')
         return value
 
     def validate_username(self, value):
         if value.lower() == 'me':
-            raise serializers.ValidationError("Пользователь 'me' запрещён.")
+            raise serializers.ValidationError('Пользователь <me> запрещён.')
         return value
 
 
@@ -85,7 +86,7 @@ class MeSerializer(serializers.ModelSerializer):
         validators=[
             validators.RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
-                message="Имя может содержать буквы, цифры и символы @/./+/-/_."
+                message='Имя может содержать буквы, цифры и символы @/./+/-/_.'
             )
         ]
     )
@@ -97,7 +98,7 @@ class MeSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         if value.lower() == 'me':
-            raise serializers.ValidationError("Пользователь 'me' запрещён.")
+            raise serializers.ValidationError('Пользователь <me> запрещён.')
         return value
 
 
