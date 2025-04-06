@@ -1,7 +1,8 @@
 import uuid
 
 from django.core.mail import send_mail
-from django.db import IntegrityError
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
@@ -15,7 +16,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from api.permissions import (
     IsAdmin,
     IsAdminOrReadOnlyCustom,
-    IsAuthorModeratorAdminOrReadOnly
+    IsAuthorModeratorAdminOrReadOnly,
 )
 from api.serializers import (
     CategorySerializer,
@@ -28,7 +29,7 @@ from api.serializers import (
     TokenSerializer,
     UserSerializer,
 )
-from reviews.models import Category, Genre, Review, Title, User
+from reviews.models import Category, Genre, Title, User
 
 
 @api_view(['POST'])
@@ -81,6 +82,7 @@ def token(request):
 
 class UsersViewSet(viewsets.ModelViewSet):
     """Представление для модели User."""
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAdmin,)
@@ -123,7 +125,8 @@ class TitleFilter(FilterSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление для объектов модели Title."""
-    queryset = Title.objects.all()
+
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnlyCustom,)
     pagination_class = LimitOffsetPagination
@@ -155,53 +158,44 @@ class CategoryViewSet(CategoryGenreBaseViewSet):
 
 class GenreViewSet(CategoryGenreBaseViewSet):
     """Представление для объектов модели Genre."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление для ревью."""
+
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAuthorModeratorAdminOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
+    def get_title(self):
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+
     def get_queryset(self):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        queryset = title.reviews.all()
-        return queryset
+        return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        try:
-            serializer.save(
-                title=get_object_or_404(Title, id=self.kwargs.get('title_id'))
-            )
-        except IntegrityError:
-            return Response(
-                {'detail': 'Вы уже оставили отзыв на это произведение.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer.save(title=self.get_title())
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
+
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAuthorModeratorAdminOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
-    def get_queryset(self):
+    def get_review(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        review = get_object_or_404(
-            title.reviews.all(),
-            id=self.kwargs.get('review_id')
-        )
-        queryset = review.comments.all()
-        return queryset
+        return get_object_or_404(title.reviews.all(),
+                                 id=self.kwargs.get('review_id'))
+
+    def get_queryset(self):
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        serializer.save(
-            review=get_object_or_404(
-                Review,
-                id=self.kwargs.get('review_id'))
-        )
+        serializer.save(review=self.get_review())
