@@ -1,13 +1,13 @@
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
-from django.db.models import Avg
-from rest_framework import serializers
-from rest_framework import validators as rf_validators
-from django.core import validators
 import re
 
-from reviews.models import Title, Genre, Category, Review, User, Comment
-from reviews.models import MAX_TEXT_LENGTH, MAX_NAME_LENGTH
+from django.core import validators
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import serializers
+from rest_framework import validators as rf_validators
+
+from reviews.constants import MAX_NAME_LENGTH, MAX_TEXT_LENGTH
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -16,10 +16,10 @@ class SignUpSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         if value.lower() == 'me':
-            raise serializers.ValidationError("Пользователь 'me' запрещён.")
+            raise serializers.ValidationError('Пользователь <me> запрещён.')
         if not re.match(r'^[\w.@+-]+$', value):
             raise serializers.ValidationError(
-                "Имя может содержать буквы, цифры и символы @/./+/-/_."
+                'Имя может содержать буквы, цифры и символы @/./+/-/_.'
             )
         return value
 
@@ -31,11 +31,11 @@ class SignUpSerializer(serializers.Serializer):
 
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError(
-                {"email": "Адрес уже используется другим пользователем."})
+                {'email': 'Адрес уже используется другим пользователем.'})
 
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError(
-                {"username": "Имя пользователя уже занято другим адресом."})
+                {'username': 'Имя пользователя уже занято другим адресом.'})
         return data
 
 
@@ -55,7 +55,7 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[
             validators.RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
-                message="Имя может содержать буквы, цифры и символы @/./+/-/_."
+                message='Имя может содержать буквы, цифры и символы @/./+/-/_.'
             ),
             rf_validators.UniqueValidator(queryset=User.objects.all())
         ]
@@ -69,12 +69,12 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         if len(value) > MAX_TEXT_LENGTH:
             raise serializers.ValidationError(
-                f"Адрес не должен быть больше {MAX_TEXT_LENGTH} симв.")
+                f'Адрес не должен быть больше {MAX_TEXT_LENGTH} симв.')
         return value
 
     def validate_username(self, value):
         if value.lower() == 'me':
-            raise serializers.ValidationError("Пользователь 'me' запрещён.")
+            raise serializers.ValidationError('Пользователь <me> запрещён.')
         return value
 
 
@@ -85,7 +85,7 @@ class MeSerializer(serializers.ModelSerializer):
         validators=[
             validators.RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
-                message="Имя может содержать буквы, цифры и символы @/./+/-/_."
+                message='Имя может содержать буквы, цифры и символы @/./+/-/_.'
             )
         ]
     )
@@ -97,7 +97,7 @@ class MeSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         if value.lower() == 'me':
-            raise serializers.ValidationError("Пользователь 'me' запрещён.")
+            raise serializers.ValidationError('Пользователь <me> запрещён.')
         return value
 
 
@@ -123,7 +123,6 @@ class TitleSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
-        required=False,
         write_only=True
     )
 
@@ -131,10 +130,12 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Genre.objects.all(),
         many=True,
-        write_only=True
+        write_only=True,
+        allow_null=False,
+        allow_empty=False
     )
 
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
@@ -156,10 +157,6 @@ class TitleSerializer(serializers.ModelSerializer):
                 'Год создания не может быть больше текущего!',
             )
         return value
-
-    def get_rating(self, object):
-        rating = object.reviews.aggregate(Avg('score'))['score__avg']
-        return rating
 
     def get_category_display(self, obj):
         if obj.category:
@@ -186,15 +183,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         queryset=User.objects.all(),
         default=serializers.CurrentUserDefault())
 
-    score = serializers.IntegerField(
-        max_value=10,
-        min_value=1
-    )
-
     class Meta:
         model = Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
-        read_only_fields = ('title',)
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
     def validate(self, data):
         request = self.context['request']
@@ -217,19 +208,6 @@ class CommentSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    review = serializers.PrimaryKeyRelatedField(
-        queryset=Review.objects.all(),
-        required=False,
-        write_only=True
-    )
-
     class Meta:
         model = Comment
-        fields = ('id', 'text', 'author', 'pub_date', 'review')
-        read_only_fields = ('pub_date',)
-
-    def validate(self, data):
-        if 'review' not in data:
-            review_id = self.context['view'].kwargs.get('review_id')
-            data['review'] = get_object_or_404(Review, id=review_id)
-        return data
+        fields = ('id', 'text', 'author', 'pub_date')
