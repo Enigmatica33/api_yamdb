@@ -2,7 +2,6 @@ import re
 
 from django.core import validators
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from rest_framework import serializers
 from rest_framework import validators as rf_validators
 
@@ -120,21 +119,6 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для модели Title."""
 
-    category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-        write_only=True
-    )
-
-    genre = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Genre.objects.all(),
-        many=True,
-        write_only=True,
-        allow_null=False,
-        allow_empty=False
-    )
-
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -149,31 +133,30 @@ class TitleSerializer(serializers.ModelSerializer):
             'category',
         )
 
-    def validate_year(self, value):
-        """Проверка года создания произведения."""
-        current_year = timezone.now().year
-        if value > current_year:
-            raise serializers.ValidationError(
-                'Год создания не может быть больше текущего!',
-            )
-        return value
 
-    def get_category_display(self, obj):
-        if obj.category:
-            return {'name': obj.category.name, 'slug': obj.category.slug}
-        return None
+class TitleReadSerializer(TitleSerializer):
+    """Сериализатор модели Title для чтения."""
 
-    def get_genre_display(self, obj):
-        return [{'name': genre.name,
-                 'slug': genre.slug} for genre in obj.genre.all()]
+    genre = GenreSerializer(read_only=True, many=True)
+    category = CategorySerializer(read_only=True)
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation.pop('category', None)
-        representation.pop('genre', None)
-        representation['category'] = self.get_category_display(instance)
-        representation['genre'] = self.get_genre_display(instance)
-        return representation
+
+class TitleWriteSerializer(TitleSerializer):
+    """Сериализатор модели Title для записи."""
+
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+        write_only=True
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True,
+        allow_null=False,
+        allow_empty=False,
+        write_only=True
+    )
 
 
 class ReviewSerializer(serializers.ModelSerializer):

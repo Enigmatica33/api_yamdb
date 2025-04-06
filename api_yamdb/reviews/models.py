@@ -1,7 +1,6 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils import timezone
 
 from reviews.constants import (
     MAX_CODE_LENGTH,
@@ -12,6 +11,7 @@ from reviews.constants import (
     MAX_TITLE_LENGTH,
     MAX_TEXT_LENGTH,
 )
+from reviews.validators import validate_year
 
 
 class User(AbstractUser):
@@ -101,55 +101,50 @@ class User(AbstractUser):
         return self.role == 'moderator'
 
 
-class Category(models.Model):
+class CategoryGenre(models.Model):
+    """Абстрактная модель для Категории и Жанра."""
     name = models.CharField(
         max_length=MAX_TITLE_LENGTH,
-        verbose_name='Название категории'
+        verbose_name='Название'
     )
     slug = models.SlugField(
         unique=True,
-        verbose_name='Slug категории',
+        verbose_name='Slug',
         help_text=(
-            'Идентификатор категории для URL; '
+            'Идентификатор для URL; '
             'разрешены символы латиницы, цифры, дефис и подчёркивание.'
         ),
     )
 
     class Meta:
+        abstract = True
+        ordering = ('name',)
+
+
+class Category(CategoryGenre):
+    """Модель Категории."""
+
+    class Meta:
         verbose_name = 'Категория произведений'
         verbose_name_plural = 'Категории произведений'
-        ordering = ('name',)
 
     def __str__(self):
         return self.name
 
 
-class Genre(models.Model):
-    name = models.CharField(
-        max_length=MAX_TITLE_LENGTH,
-        verbose_name='Название жанра'
-    )
-
-    slug = models.SlugField(
-        unique=True,
-        verbose_name='Slug жанра',
-        help_text=(
-            'Идентификатор жанра для URL; '
-            'разрешены символы латиницы, цифры, дефис и подчёркивание.'
-        ),
-
-    )
+class Genre(CategoryGenre):
+    """Модель Жанра."""
 
     class Meta:
         verbose_name = 'Жанр произведений'
         verbose_name_plural = 'Жанры произведений'
-        ordering = ('name',)
 
     def __str__(self):
         return self.name
 
 
 class Title(models.Model):
+    """Модель Произведения."""
     name = models.CharField(
         max_length=MAX_TITLE_LENGTH,
         verbose_name='Название произведения'
@@ -158,18 +153,17 @@ class Title(models.Model):
         blank=True,
         null=True,
         validators=[
-            MaxValueValidator(timezone.now().year),
+            validate_year,
         ],
         verbose_name='Год создания'
     )
     description = models.TextField(
         blank=True,
-        null=True,
         verbose_name='Описание произведения'
     )
     genre = models.ManyToManyField(
         Genre,
-        through='Title_genre',
+        through='Title_Genre',
         verbose_name='Жанр'
     )
     category = models.ForeignKey(
@@ -190,7 +184,7 @@ class Title(models.Model):
         return self.name
 
 
-class Title_genre(models.Model):
+class Title_Genre(models.Model):
     """Связь жанра и Произведения."""
 
     genre = models.ForeignKey(

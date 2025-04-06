@@ -3,16 +3,16 @@ import uuid
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
+from api.filters import TitleFilter
 from api.permissions import (
     IsAdmin,
     IsAdminOrReadOnlyCustom,
@@ -25,7 +25,8 @@ from api.serializers import (
     MeSerializer,
     ReviewSerializer,
     SignUpSerializer,
-    TitleSerializer,
+    TitleReadSerializer,
+    TitleWriteSerializer,
     TokenSerializer,
     UserSerializer,
 )
@@ -108,44 +109,34 @@ def me_profile(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class TitleFilter(FilterSet):
-    genre = CharFilter(
-        field_name='genre__slug',
-        lookup_expr='exact'
-    )
-    category = CharFilter(
-        field_name='category__slug',
-        lookup_expr='exact'
-    )
-
-    class Meta:
-        model = Title
-        fields = ['genre', 'category', 'name', 'year']
-
-
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление для объектов модели Title."""
 
     queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
-    serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnlyCustom,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'patch', 'delete')
+
+    def get_serializer_class(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return TitleReadSerializer
+        return TitleWriteSerializer
 
 
 class CategoryGenreBaseViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
-    # mixins.DestroyModelMixin
+    mixins.DestroyModelMixin
 ):
     """Базовое представление для Category и Genre."""
     permission_classes = (IsAdminOrReadOnlyCustom, )
     lookup_field = 'slug'
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
+    filterset_fields = ('category', 'genre', 'name', 'year')
     search_fields = ('name',)
     # http_method_names = ['get', 'post', 'delete']
 
