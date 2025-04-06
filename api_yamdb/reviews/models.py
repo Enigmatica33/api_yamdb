@@ -1,9 +1,12 @@
+import re
+
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import TextChoices
 
 from reviews.constants import (
-    MAX_CODE_LENGTH,
     MAX_NAME_LENGTH,
     MAX_ROLE_LENGTH,
     MAX_SCORE,
@@ -14,25 +17,32 @@ from reviews.constants import (
 from reviews.validators import validate_year
 
 
-class User(AbstractUser):
-    USER_ROLES = (
-        ('user', 'Пользователь'),
-        ('moderator', 'Модератор'),
-        ('admin', 'Администратор'),
-    )
+def validate_username(value):
+    if value.lower() == 'me':
+        raise ValidationError('Имя <me> запрещено.')
+    if not re.fullmatch(r'^[\w.@+-]+$', value):
+        raise ValidationError(
+            'Имя пользователя содержит недопустимые символы. '
+            'Разрешены только буквы, цифры и символы @/./+/-/_'
+        )
 
+
+class UserRole(TextChoices):
+    USER = 'user', 'Пользователь'
+    MODERATOR = 'moderator', 'Модератор'
+    ADMIN = 'admin', 'Администратор'
+
+
+class User(AbstractUser):
     username = models.CharField(
         max_length=MAX_NAME_LENGTH,
         unique=True,
-        blank=False,
-        null=False,
-        verbose_name='Пользователь'
+        verbose_name='Пользователь',
+        validators=[validate_username]
     )
 
     email = models.EmailField(
         max_length=MAX_TEXT_LENGTH,
-        unique=True,
-        blank=False,
         null=False,
         verbose_name='Электронная почта'
     )
@@ -56,32 +66,9 @@ class User(AbstractUser):
 
     role = models.CharField(
         max_length=MAX_ROLE_LENGTH,
-        choices=USER_ROLES,
-        default='user',
+        choices=UserRole.choices,
+        default=UserRole.USER,
         verbose_name='Роль'
-    )
-
-    confirmation_code = models.CharField(
-        max_length=MAX_CODE_LENGTH,
-        blank=True,
-        null=True,
-        verbose_name='Код подтверждения'
-    )
-
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='custom_user_set',
-        blank=True,
-        help_text='The groups this user belongs to.',
-        verbose_name='Groups'
-    )
-
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='custom_user_set',
-        blank=True,
-        help_text='Specific permissions for this user.',
-        verbose_name='User permissions'
     )
 
     class Meta:
@@ -94,11 +81,15 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == 'admin' or self.is_superuser
+        return (
+            self.role == 'admin'
+            or self.is_superuser
+            or self.is_staff
+        )
 
     @property
     def is_moderator(self):
-        return self.role == 'moderator'
+        return self.role == UserRole.MODERATOR
 
 
 class CategoryGenre(models.Model):
