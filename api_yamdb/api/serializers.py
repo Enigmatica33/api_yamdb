@@ -124,7 +124,6 @@ class TitleSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
-        required=False,
         write_only=True
     )
 
@@ -132,7 +131,9 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Genre.objects.all(),
         many=True,
-        write_only=True
+        write_only=True,
+        allow_null=False,
+        allow_empty=False
     )
 
     rating = serializers.SerializerMethodField()
