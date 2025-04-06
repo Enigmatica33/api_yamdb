@@ -1,7 +1,6 @@
 import re
 
 from django.core import validators
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers
@@ -135,7 +134,7 @@ class TitleSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
@@ -157,10 +156,6 @@ class TitleSerializer(serializers.ModelSerializer):
                 'Год создания не может быть больше текущего!',
             )
         return value
-
-    def get_rating(self, object):
-        rating = object.reviews.aggregate(Avg('score'))['score__avg']
-        return rating
 
     def get_category_display(self, obj):
         if obj.category:
@@ -187,15 +182,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         queryset=User.objects.all(),
         default=serializers.CurrentUserDefault())
 
-    score = serializers.IntegerField(
-        max_value=10,
-        min_value=1
-    )
-
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-        read_only_fields = ('title',)
 
     def validate(self, data):
         request = self.context['request']
@@ -218,19 +207,6 @@ class CommentSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    review = serializers.PrimaryKeyRelatedField(
-        queryset=Review.objects.all(),
-        required=False,
-        write_only=True
-    )
-
     class Meta:
         model = Comment
-        fields = ('id', 'text', 'author', 'pub_date', 'review')
-        read_only_fields = ('pub_date',)
-
-    def validate(self, data):
-        if 'review' not in data:
-            review_id = self.context['view'].kwargs.get('review_id')
-            data['review'] = get_object_or_404(Review, id=review_id)
-        return data
+        fields = ('id', 'text', 'author', 'pub_date')
