@@ -169,6 +169,10 @@ class TitleWriteSerializer(TitleSerializer):
         write_only=True
     )
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        return TitleReadSerializer(rep).data
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор модели Review."""
