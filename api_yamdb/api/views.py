@@ -138,7 +138,6 @@ class CategoryGenreBaseViewSet(
     filter_backends = (filters.SearchFilter,)
     filterset_fields = ('category', 'genre', 'name', 'year')
     search_fields = ('name',)
-    # http_method_names = ['get', 'post', 'delete']
 
 
 class CategoryViewSet(CategoryGenreBaseViewSet):
