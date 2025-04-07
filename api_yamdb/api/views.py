@@ -1,6 +1,6 @@
 from django.db.models import Avg
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
@@ -26,7 +26,7 @@ from api.serializers import (
     TokenSerializer,
     UserSerializer,
 )
-from reviews.models import Category, Genre, Title, User
+from reviews.models import Category, Genre, Review, Title, User
 
 
 @api_view(['POST'])
@@ -140,8 +140,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        return get_object_or_404(title.reviews.all(),
+        return get_object_or_404(Review,
+                                 title__id=self.kwargs.get('title_id'),
                                  id=self.kwargs.get('review_id'))
 
     def get_queryset(self):
