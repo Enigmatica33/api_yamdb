@@ -8,14 +8,14 @@ from reviews.models import (
     Review,
     Comment,
     User,
-    Title_genre
+    Title_Genre
 )
 
 model_csv_dict = {
     'static/data/category.csv': Category,
     'static/data/genre.csv': Genre,
     'static/data/titles.csv': Title,
-    'static/data/genre_title.csv': Title_genre,
+    'static/data/genre_title.csv': Title_Genre,
     'static/data/users.csv': User,
     'static/data/review.csv': Review,
     'static/data/comments.csv': Comment,

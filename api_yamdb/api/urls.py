@@ -5,7 +5,6 @@ from api.views import (
     CategoryViewSet,
     CommentViewSet,
     GenreViewSet,
-    me_profile,
     ReviewViewSet,
     signup,
     TitleViewSet,
@@ -34,6 +33,5 @@ v1_router.register('users', UsersViewSet, basename='users')
 urlpatterns = [
     path('v1/auth/signup/', signup, name='signup'),
     path('v1/auth/token/', token, name='token'),
-    path('v1/users/me/', me_profile, name='me_profile'),
     path('v1/', include(v1_router.urls)),
 ]
