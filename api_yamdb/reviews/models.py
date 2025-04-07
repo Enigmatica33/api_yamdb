@@ -30,6 +30,7 @@ class User(AbstractUser):
     )
     email = models.EmailField(
         max_length=MAX_TEXT_LENGTH,
+        unique=True,
         null=False,
         verbose_name='Электронная почта'
     )
@@ -65,7 +66,7 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         return (
-            self.role == 'admin'
+            self.role == UserRole.ADMIN
             or self.is_superuser
             or self.is_staff
         )
