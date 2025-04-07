@@ -27,7 +27,7 @@ from api.serializers import (
     TokenSerializer,
     UserSerializer,
 )
-from reviews.models import Category, Genre, Title, User
+from reviews.models import Category, Genre, Review, Title, User
 
 
 @api_view(['POST'])
@@ -128,8 +128,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        return get_object_or_404(title.reviews.all(),
+        return get_object_or_404(Review,
+                                 title__id=self.kwargs.get('title_id'),
                                  id=self.kwargs.get('review_id'))
 
     def get_queryset(self):

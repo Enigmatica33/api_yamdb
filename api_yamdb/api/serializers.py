@@ -3,7 +3,6 @@ import re
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.http import Http404
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework import validators as rf_validators
 
@@ -187,9 +186,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         request = self.context['request']
         if request.method == 'POST':
             title_id = self.context['view'].kwargs.get('title_id')
-            title = get_object_or_404(Title, id=title_id)
             author = request.user
-            if Review.objects.filter(title=title, author=author).exists():
+            if Review.objects.filter(title__id=title_id,
+                                     author=author).exists():
                 raise serializers.ValidationError(
                     'Вы уже оставили отзыв на это произведение.'
                 )
