@@ -94,25 +94,22 @@ class CategoryGenre(models.Model):
         abstract = True
         ordering = ('name',)
 
+    def __str__(self):
+        return self.name
+
 
 class Category(CategoryGenre):
     """Модель Категории."""
-    class Meta:
+    class Meta(CategoryGenre.Meta):
         verbose_name = 'Категория произведений'
         verbose_name_plural = 'Категории произведений'
-
-    def __str__(self):
-        return self.name
 
 
 class Genre(CategoryGenre):
     """Модель Жанра."""
-    class Meta:
+    class Meta(CategoryGenre.Meta):
         verbose_name = 'Жанр произведений'
         verbose_name_plural = 'Жанры произведений'
-
-    def __str__(self):
-        return self.name
 
 
 class Title(models.Model):
@@ -122,8 +119,6 @@ class Title(models.Model):
         verbose_name='Название произведения'
     )
     year = models.SmallIntegerField(
-        blank=True,
-        null=True,
         validators=[
             validate_year,
         ],
@@ -156,7 +151,7 @@ class Title(models.Model):
         return self.name
 
 
-class Title_Genre(models.Model):
+class TitleGenre(models.Model):
     """Связь жанра и Произведения."""
     genre = models.ForeignKey(
         Genre,
