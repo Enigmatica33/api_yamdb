@@ -1,7 +1,7 @@
 import re
 
-from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -13,6 +13,7 @@ from reviews.models import validate_username
 
 
 class SignUpSerializer(serializers.Serializer):
+    """Сериализатор для регистрации."""
     email = serializers.EmailField(max_length=MAX_TEXT_LENGTH, required=True)
     username = serializers.CharField(
         max_length=MAX_NAME_LENGTH,
@@ -23,7 +24,6 @@ class SignUpSerializer(serializers.Serializer):
     def create(self, validated_data):
         email = validated_data['email']
         username = validated_data['username']
-
         user, _ = User.objects.get_or_create(email=email, username=username)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
@@ -70,6 +70,7 @@ class SignUpSerializer(serializers.Serializer):
 
 
 class TokenSerializer(serializers.Serializer):
+    """Сериализатор для получения токена."""
     username = serializers.CharField(max_length=MAX_NAME_LENGTH, required=True)
     confirmation_code = serializers.CharField(required=True)
 
@@ -80,7 +81,7 @@ class TokenSerializer(serializers.Serializer):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            raise Http404("Пользователь не найден.")
+            raise Http404('Пользователь не найден.')
 
         if not default_token_generator.check_token(user, confirmation_code):
             raise serializers.ValidationError(
@@ -91,11 +92,11 @@ class TokenSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор модели User."""
     email = serializers.EmailField(
         max_length=MAX_TEXT_LENGTH,
         validators=[rf_validators.UniqueValidator(queryset=User.objects.all())]
     )
-
     username = serializers.CharField(
         max_length=MAX_NAME_LENGTH,
         validators=[
@@ -111,13 +112,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class MeSerializer(UserSerializer):
+    """Сериализатор Me."""
     class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для модели Category."""
-
     class Meta:
         model = Category
         fields = ('name', 'slug')
@@ -125,7 +126,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Genre."""
-
     class Meta:
         model = Genre
         fields = ('name', 'slug')
@@ -133,7 +133,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для модели Title."""
-
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -151,14 +150,12 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class TitleReadSerializer(TitleSerializer):
     """Сериализатор модели Title для чтения."""
-
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
 
 
 class TitleWriteSerializer(TitleSerializer):
     """Сериализатор модели Title для записи."""
-
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
@@ -175,6 +172,7 @@ class TitleWriteSerializer(TitleSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Review."""
     author = serializers.SlugRelatedField(
         'username',
         read_only=False,
@@ -199,6 +197,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Comment."""
     author = serializers.SlugRelatedField(
         'username',
         read_only=False,

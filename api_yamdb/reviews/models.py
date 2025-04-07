@@ -1,6 +1,3 @@
-import re
-
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -14,17 +11,7 @@ from reviews.constants import (
     MAX_TITLE_LENGTH,
     MAX_TEXT_LENGTH,
 )
-from reviews.validators import validate_year
-
-
-def validate_username(value):
-    if value.lower() == 'me':
-        raise ValidationError('Имя <me> запрещено.')
-    if not re.fullmatch(r'^[\w.@+-]+$', value):
-        raise ValidationError(
-            'Имя пользователя содержит недопустимые символы. '
-            'Разрешены только буквы, цифры и символы @/./+/-/_'
-        )
+from reviews.validators import validate_year, validate_username
 
 
 class UserRole(TextChoices):
@@ -34,36 +21,32 @@ class UserRole(TextChoices):
 
 
 class User(AbstractUser):
+    """Модель Пользователя."""
     username = models.CharField(
         max_length=MAX_NAME_LENGTH,
         unique=True,
         verbose_name='Пользователь',
         validators=[validate_username]
     )
-
     email = models.EmailField(
         max_length=MAX_TEXT_LENGTH,
         null=False,
         verbose_name='Электронная почта'
     )
-
     first_name = models.CharField(
         max_length=MAX_NAME_LENGTH,
         blank=True,
         verbose_name='Имя'
     )
-
     last_name = models.CharField(
         max_length=MAX_NAME_LENGTH,
         blank=True,
         verbose_name='Фамилия'
     )
-
     bio = models.TextField(
         blank=True,
         verbose_name='Биография'
     )
-
     role = models.CharField(
         max_length=MAX_ROLE_LENGTH,
         choices=UserRole.choices,
@@ -114,7 +97,6 @@ class CategoryGenre(models.Model):
 
 class Category(CategoryGenre):
     """Модель Категории."""
-
     class Meta:
         verbose_name = 'Категория произведений'
         verbose_name_plural = 'Категории произведений'
@@ -125,7 +107,6 @@ class Category(CategoryGenre):
 
 class Genre(CategoryGenre):
     """Модель Жанра."""
-
     class Meta:
         verbose_name = 'Жанр произведений'
         verbose_name_plural = 'Жанры произведений'
@@ -177,7 +158,6 @@ class Title(models.Model):
 
 class Title_Genre(models.Model):
     """Связь жанра и Произведения."""
-
     genre = models.ForeignKey(
         Genre,
         on_delete=models.SET_NULL,
@@ -203,6 +183,7 @@ class Title_Genre(models.Model):
 
 
 class Review(models.Model):
+    """Модель Отзыва."""
     text = models.TextField(
         verbose_name='Текст отзыва'
     )
@@ -240,6 +221,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """Модель Комментария."""
     text = models.TextField(
         verbose_name='Текст комментария'
     )

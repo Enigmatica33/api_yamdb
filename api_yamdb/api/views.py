@@ -1,5 +1,4 @@
 from django.db.models import Avg
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, permissions, status, viewsets
@@ -28,7 +27,6 @@ from api.serializers import (
     UserSerializer,
 )
 from reviews.models import Category, Genre, Title, User
-from reviews.models import User
 
 
 @api_view(['POST'])
@@ -69,7 +67,6 @@ class UsersViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             serializer = MeSerializer(user)
             return Response(serializer.data)
-
         serializer = MeSerializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -78,13 +75,12 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление для объектов модели Title."""
-
     queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    http_method_names = ('get', 'post', 'patch', 'delete')
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
         if self.request.method in permissions.SAFE_METHODS:
@@ -115,14 +111,12 @@ class CategoryViewSet(CategoryGenreBaseViewSet):
 
 class GenreViewSet(CategoryGenreBaseViewSet):
     """Представление для объектов модели Genre."""
-
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление для ревью."""
-
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAuthorOrAdminOrModeratorOrReadOnly,)
@@ -140,7 +134,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
-
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAuthorOrAdminOrModeratorOrReadOnly,)
