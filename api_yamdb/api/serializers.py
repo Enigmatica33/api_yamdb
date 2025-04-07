@@ -1,17 +1,39 @@
 import re
 
-from django.core import validators
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework import validators as rf_validators
 
 from reviews.constants import MAX_NAME_LENGTH, MAX_TEXT_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import validate_username
 
 
 class SignUpSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=254, required=True)
-    username = serializers.CharField(max_length=150, required=True)
+    email = serializers.EmailField(max_length=MAX_TEXT_LENGTH, required=True)
+    username = serializers.CharField(
+        max_length=MAX_NAME_LENGTH,
+        required=True,
+        validators=[validate_username]
+    )
+
+    def create(self, validated_data):
+        email = validated_data['email']
+        username = validated_data['username']
+
+        user, _ = User.objects.get_or_create(email=email, username=username)
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject='Код подтверждения YaMDb',
+            message=f'Ваш код подтверждения: {confirmation_code}',
+            from_email='from@yamdb.com',
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        return user
 
     def validate_username(self, value):
         if value.lower() == 'me':
@@ -25,22 +47,47 @@ class SignUpSerializer(serializers.Serializer):
     def validate(self, data):
         email = data.get('email')
         username = data.get('username')
-        if User.objects.filter(email=email, username=username).exists():
-            return data
 
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError(
-                {'email': 'Адрес уже используется другим пользователем.'})
+        user_by_email = User.objects.filter(email=email).first()
+        user_by_username = User.objects.filter(username=username).first()
 
-        if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError(
-                {'username': 'Имя пользователя уже занято другим адресом.'})
+        if user_by_email and user_by_username:
+            if user_by_email != user_by_username:
+                raise serializers.ValidationError({
+                    'email': 'Адрес уже используется другим пользователем.',
+                    'username': 'Имя пользователя уже занято другим адресом.'
+                })
+        elif user_by_email:
+            raise serializers.ValidationError({
+                'email': 'Адрес уже используется другим пользователем.'
+            })
+        elif user_by_username:
+            raise serializers.ValidationError({
+                'username': 'Имя пользователя уже занято другим адресом.'
+            })
+
         return data
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150, required=True)
+    username = serializers.CharField(max_length=MAX_NAME_LENGTH, required=True)
     confirmation_code = serializers.CharField(required=True)
+
+    def validate(self, data):
+        username = data.get('username')
+        confirmation_code = data.get('confirmation_code')
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise Http404("Пользователь не найден.")
+
+        if not default_token_generator.check_token(user, confirmation_code):
+            raise serializers.ValidationError(
+                {'confirmation_code': 'Некорректный код подтверждения.'})
+
+        data['user'] = user
+        return data
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -52,10 +99,7 @@ class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         max_length=MAX_NAME_LENGTH,
         validators=[
-            validators.RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message='Имя может содержать буквы, цифры и символы @/./+/-/_.'
-            ),
+            validate_username,
             rf_validators.UniqueValidator(queryset=User.objects.all())
         ]
     )
@@ -65,39 +109,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'first_name', 'last_name',
                   'bio', 'role')
 
-    def validate_email(self, value):
-        if len(value) > MAX_TEXT_LENGTH:
-            raise serializers.ValidationError(
-                f'Адрес не должен быть больше {MAX_TEXT_LENGTH} симв.')
-        return value
 
-    def validate_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError('Пользователь <me> запрещён.')
-        return value
-
-
-class MeSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(read_only=True)
-    username = serializers.CharField(
-        max_length=MAX_NAME_LENGTH,
-        validators=[
-            validators.RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message='Имя может содержать буквы, цифры и символы @/./+/-/_.'
-            )
-        ]
-    )
-
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'first_name', 'last_name',
-                  'bio', 'role')
-
-    def validate_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError('Пользователь <me> запрещён.')
-        return value
+class MeSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
 
 
 class CategorySerializer(serializers.ModelSerializer):
