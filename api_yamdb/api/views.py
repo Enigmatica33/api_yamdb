@@ -1,13 +1,14 @@
 from django.db.models import Avg
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, permissions, status, viewsets
+from django.shortcuts import get_object_or_404
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
+from api.baseclass import CategoryGenreBaseViewSet
 from api.filters import TitleFilter
 from api.permissions import (
     IsAdmin,
@@ -75,7 +76,9 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление для объектов модели Title."""
-    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
+    queryset = Title.objects.all().annotate(
+        rating=Avg('reviews__score')
+    ).order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
@@ -86,21 +89,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in permissions.SAFE_METHODS:
             return TitleReadSerializer
         return TitleWriteSerializer
-
-
-class CategoryGenreBaseViewSet(
-    viewsets.GenericViewSet,
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin
-):
-    """Базовое представление для Category и Genre."""
-    permission_classes = (IsAdminOrReadOnly,)
-    lookup_field = 'slug'
-    pagination_class = LimitOffsetPagination
-    filter_backends = (filters.SearchFilter,)
-    filterset_fields = ('category', 'genre', 'name', 'year')
-    search_fields = ('name',)
 
 
 class CategoryViewSet(CategoryGenreBaseViewSet):
