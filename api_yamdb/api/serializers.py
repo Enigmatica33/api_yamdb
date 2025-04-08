@@ -4,7 +4,6 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.http import Http404
 from rest_framework import serializers
-from rest_framework import validators as rf_validators
 
 from reviews.constants import MAX_NAME_LENGTH, MAX_TEXT_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title, User
@@ -34,15 +33,6 @@ class SignUpSerializer(serializers.Serializer):
         )
         return user
 
-    def validate_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError('Пользователь <me> запрещён.')
-        if not re.match(r'^[\w.@+-]+$', value):
-            raise serializers.ValidationError(
-                'Имя может содержать буквы, цифры и символы @/./+/-/_.'
-            )
-        return value
-
     def validate(self, data):
         email = data.get('email')
         username = data.get('username')
@@ -50,17 +40,22 @@ class SignUpSerializer(serializers.Serializer):
         user_by_email = User.objects.filter(email=email).first()
         user_by_username = User.objects.filter(username=username).first()
 
-        if user_by_email and user_by_username:
-            if user_by_email != user_by_username:
-                raise serializers.ValidationError({
-                    'email': 'Адрес уже используется другим пользователем.',
-                    'username': 'Имя пользователя уже занято другим адресом.'
-                })
-        elif user_by_email:
+        # Если оба существуют, но это разные юзеры — ошибка
+        if user_by_email and user_by_username and (
+           user_by_email != user_by_username):
+            raise serializers.ValidationError({
+                'email': 'Адрес уже используется другим пользователем.',
+                'username': 'Имя пользователя уже занято другим адресом.'
+            })
+
+        # Если только email занят, но не этим username
+        if user_by_email and not user_by_username:
             raise serializers.ValidationError({
                 'email': 'Адрес уже используется другим пользователем.'
             })
-        elif user_by_username:
+
+        # Если только username занят, но не этим email
+        if user_by_username and not user_by_email:
             raise serializers.ValidationError({
                 'username': 'Имя пользователя уже занято другим адресом.'
             })
@@ -92,18 +87,6 @@ class TokenSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор модели User."""
-    email = serializers.EmailField(
-        max_length=MAX_TEXT_LENGTH,
-        validators=[rf_validators.UniqueValidator(queryset=User.objects.all())]
-    )
-    username = serializers.CharField(
-        max_length=MAX_NAME_LENGTH,
-        validators=[
-            validate_username,
-            rf_validators.UniqueValidator(queryset=User.objects.all())
-        ]
-    )
-
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name', 'last_name',
