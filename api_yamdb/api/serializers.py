@@ -39,8 +39,7 @@ class SignUpSerializer(serializers.Serializer):
         user_by_username = User.objects.filter(username=username).first()
 
         # Если оба существуют, но это разные юзеры — ошибка
-        if user_by_email and user_by_username and (
-           user_by_email != user_by_username):
+        if user_by_email != user_by_username:
             raise serializers.ValidationError({
                 'email': 'Адрес уже используется другим пользователем.',
                 'username': 'Имя пользователя уже занято другим адресом.'
